@@ -1,79 +1,171 @@
 export default class Main {
   constructor() {
-      console.log("游戏开始！");
+    console.log("游戏开始！");
 
-      this.canvas = wx.createCanvas();  // 创建 Canvas 画布
-      this.ctx = this.canvas.getContext('2d');  // 获取 2D 上下文
-      this.screenWidth = this.canvas.width;
-      this.screenHeight = this.canvas.height;
+    this.canvas = wx.createCanvas();
+    this.ctx = this.canvas.getContext("2d");
+    this.screenWidth = this.canvas.width;
+    this.screenHeight = this.canvas.height;
 
-      this.bgNum = 0;
-      this.bgAssets = ['images/countryStreet.jpg', 'images/waterStreet.jpg', 'images/dogsPool.jpg', 'images/bg.jpg'];
+    this.bgImage = wx.createImage();
+    this.startButtonPic = wx.createImage();
+    this.startClicked = false;
 
-      this.bgImage = wx.createImage();  // 创建初始界面图片对象
-      wx.onTouchStart(this.handleTouchStart.bind(this));
-      this.rendStarter();
+    this.isGameStarted = false;
+    this.isLevelChosen = false;
+
+    this.rendStarter();
+
+    wx.onTouchStart(this.handleTouchStart.bind(this));
+    wx.onTouchEnd(this.handleTouchEnd.bind(this));
   }
 
   rendStarter() {
-    this.bgImage.src = this.bgAssets[this.bgNum];  // 设定图片路径
-    this.bgImage.onload = () => {  // 确保图片加载后再绘制
+    this.bgImage.src = "images/countryStreet.jpg";
+    this.bgImage.onload = () => {
       this.ctx.clearRect(0, 0, this.screenWidth, this.screenHeight);
-      this.ctx.drawImage(this.bgImage, 0, 0, this.screenWidth, this.screenHeight); // 绘制背景
+      this.ctx.drawImage(
+        this.bgImage,
+        0,
+        0,
+        this.screenWidth,
+        this.screenHeight
+      );
 
-      this.ctx.font = '30px Arial';
-      this.ctx.fillStyle = '#000000';
-      this.ctx.textAlign = 'center';
-      this.ctx.fillText('自制小游戏', this.canvas.width / 2, this.canvas.height / 4); // 显示文字标题
+      this.ctx.font = "30px Arial";
+      this.ctx.fillStyle = "#FFFFFF";
+      this.ctx.textAlign = "center";
+      this.ctx.fillText("SED GAME", this.canvas.width / 2, this.canvas.height / 4);
 
-      this.changeButton = {
-        x: this.screenWidth - 100,  // 按钮左上角 X 坐标
-        y: this.screenHeight - 100,  // 按钮左上角 Y 坐标
-        width: 50,
+      this.startButton = {
+        x: this.screenWidth / 2 - 75,
+        y: this.screenHeight / 2,
+        width: 150,
         height: 50,
       };
 
-      this.ctx.fillStyle = "red";
-      this.ctx.fillRect(this.changeButton.x, this.changeButton.y, this.changeButton.width, this.changeButton.height);
-
-      // this.start();
-    }
+      this.drawButton();
+    };
   }
 
-  start() {
-      console.log("游戏初始化...");
+  drawButton() {
+    if (this.isGameStarted) return; 
 
-      // 启动按钮监视
-      wx.onTouchStart((event) => {
-        const touch = event.touches[0]; // 获取触摸点
-        const x = touch.clientX;
-        const y = touch.clientY;
-        
-        // 检测是否点击了按钮
-        if (this.isChangeButtonClicked(x, y)) {
-          this.bgNum = (this.bgNum + 1) % 4;
-          console.log(this.bgNum);
-          this.rendStarter();
-        }
-      })
-      // this.loop();
+    if (this.startClicked) this.startButtonPic.src = "images/startButtonClick.png";
+    else this.startButtonPic.src = "images/startButtonPic.png";
+
+    this.startButtonPic.onload = () => {
+      this.ctx.drawImage(
+        this.startButtonPic,
+        this.screenWidth / 2 - 100,
+        this.screenHeight / 2-10,
+        200,
+        50
+      );
+
+      this.ctx.font = "30px Arial";
+      this.ctx.fillStyle = "#000000";
+      this.ctx.textAlign = "center";
+      this.ctx.fillText(
+        "开始游戏",
+        this.canvas.width / 2,
+        this.canvas.height / 2 + 25
+      );
+    }
+
   }
 
   handleTouchStart(event) {
+    if (this.isGameStarted) return;
+
     const touch = event.touches[0];
-    if (this.isChangeButtonClicked(touch.clientX, touch.clientY)) {
-        this.bgNum = (this.bgNum + 1) % this.bgAssets.length;
-        this.rendStarter();
+    if (this.isstartButtonClicked(touch.clientX, touch.clientY)) {
+      this.startClicked = true;
+      this.drawButton();
     }
   }
 
-  isChangeButtonClicked(x, y) {
-    return (
-        x >= this.changeButton.x &&
-        x <= this.changeButton.x + this.changeButton.width &&
-        y >= this.changeButton.y &&
-        y <= this.changeButton.y + this.changeButton.height
-    );
+  handleTouchEnd(event) {
+    if (this.isGameStarted) return;
+
+    const touch = event.changedTouches[0];
+    if (this.isstartButtonClicked(touch.clientX, touch.clientY)) {
+      this.isGameStarted = true; 
+      this.rendLevels(); 
+    } 
   }
 
+  rendLevels() {
+    this.bgImage.src = "images/bg.jpg";
+    this.bgImage.onload = () => {
+      this.ctx.clearRect(0, 0, this.screenWidth, this.screenHeight);
+      this.ctx.drawImage(
+        this.bgImage,
+        0,
+        0,
+        this.screenWidth,
+        this.screenHeight
+      );
+
+      this.levels = [
+        { x: 30, y: 150, width: 80, height: 80, targetBg: "images/levelBg1.jpg" },
+        { x: 160, y: 150, width: 80, height: 80, targetBg: "images/levelBg2.jpg" },
+        { x: 290, y: 150, width: 80, height: 80, targetBg: "images/levelBg3.jpeg" },
+      ];
+
+      this.levelImage = wx.createImage();
+      this.levelImage.src = "images/levelPic.png";
+      this.levelImage.onload = () => {
+        this.levels.forEach((level) => {
+          this.ctx.drawImage(
+            this.levelImage,
+            level.x,
+            level.y,
+            level.width,
+            level.height
+          );
+        });
+      };
+    };
+
+    if (this.isLevelChosen) return;
+    wx.onTouchStart(this.handleLevelClick.bind(this));
+  }
+
+  handleLevelClick(event) {
+    if (this.isLevelChosen) return;
+    const touch = event.touches[0];
+    const clickedLevel = this.levels.find(
+      (level) =>
+        touch.clientX >= level.x &&
+        touch.clientX <= level.x + level.width &&
+        touch.clientY >= level.y &&
+        touch.clientY <= level.y + level.height
+    );
+
+    if (clickedLevel) {
+      this.isLevelChosen = true;
+      this.bgImage.src = clickedLevel.targetBg;
+      this.bgImage.onload = () => {
+        this.ctx.clearRect(0, 0, this.screenWidth, this.screenHeight);
+        this.ctx.drawImage(
+          this.bgImage,
+          0,
+          0,
+          this.screenWidth,
+          this.screenHeight
+        );
+      };
+    }
+  }
+
+  isstartButtonClicked(x, y) {
+    if (!this.startButton) return false; 
+    return (
+      x >= this.startButton.x &&
+      x <= this.startButton.x + this.startButton.width &&
+      y >= this.startButton.y &&
+      y <= this.startButton.y + this.startButton.height
+    );
+  }
 }
